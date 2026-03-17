@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Taxis - Venecia</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #050505; color: #e0e0e0; margin: 0; padding: 10px; }
+        .header { text-align: center; padding: 10px 0; border-bottom: 1px solid #d4af37; margin-bottom: 15px; }
+        .header h1 { color: #d4af37; font-size: 1.1em; text-transform: uppercase; letter-spacing: 2px; margin: 0; }
+        
+        .filter-section { background: #111; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222; }
+        label { font-size: 0.7em; color: #d4af37; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        select, input { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #333; background: #000; color: white; margin-bottom: 10px; box-sizing: border-box; font-size: 0.85em; }
+        
+        .card-stats { display: flex; gap: 8px; margin-bottom: 15px; }
+        .stat { flex: 1; background: #161616; padding: 8px; border-radius: 8px; border: 1px solid #333; text-align: center; }
+        .stat span { display: block; font-size: 0.6em; color: #888; text-transform: uppercase; margin-bottom: 2px; }
+        .stat b { font-size: 0.95em; color: #d4af37; }
+
+        .sub-filtros { display: none; flex-direction: column; }
+        .info-semana { font-size: 0.8em; color: #d4af37; text-align: center; margin-bottom: 10px; font-weight: bold; }
+
+        .tabla-socios { width: 100%; border-collapse: collapse; font-size: 0.8em; background: #111; border-radius: 8px; overflow: hidden; table-layout: fixed; margin-bottom: 25px; }
+        .tabla-socios th { background: #d4af37; color: black; padding: 8px 4px; text-align: center; text-transform: uppercase; font-size: 0.7em; }
+        .tabla-socios td { padding: 10px 4px; border-bottom: 1px solid #222; text-align: center; word-wrap: break-word; }
+        .total-row { background: #1a1a1a; font-weight: bold; color: white; border-top: 2px solid #d4af37; }
+        
+        /* SECCIÓN RANKING */
+        .ranking-title { color: #d4af37; font-size: 1.2em; text-transform: uppercase; text-align: center; margin: 30px 0 15px; font-weight: bold; letter-spacing: 2px; }
+        
+        .podium-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        
+        .rank-card { background: #111; border-radius: 12px; padding: 15px; display: flex; align-items: center; justify-content: space-between; border-left: 5px solid #444; position: relative; overflow: hidden; }
+        .rank-card.oro { border-left-color: #d4af37; background: linear-gradient(90deg, #1a1608 0%, #111 100%); border: 1px solid #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        .rank-card.plata { border-left-color: #c0c0c0; }
+        .rank-card.bronce { border-left-color: #cd7f32; }
+
+        .rank-info { display: flex; align-items: center; gap: 12px; }
+        .rank-medal { font-size: 2.2em; }
+        .rank-name { font-size: 1.1em; font-weight: bold; color: #fff; text-transform: uppercase; display: block; }
+        
+        /* AJUSTE: Botellas más grandes */
+        .rank-qty { font-size: 0.9em; color: #aaa; font-weight: 500; }
+        
+        .rank-monto { text-align: right; }
+        .rank-monto b { display: block; font-size: 1.2em; color: #d4af37; }
+        
+        /* AJUSTE: Comisión Total */
+        .rank-monto span { font-size: 0.6em; color: #666; text-transform: uppercase; }
+
+        .lista-ranking-resto { background: #0c0c0c; border-radius: 8px; padding: 5px; }
+        .row-ranking { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #222; font-size: 0.85em; align-items: center; }
+
+        .loading { text-align: center; color: #d4af37; padding: 15px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+
+<div class="header"><h1>REPORTE DE COMISIONES</h1></div>
+
+<div class="filter-section">
+    <label>Tipo de Reporte:</label>
+    <select id="rango-tiempo" onchange="gestionarFiltros()">
+        <option value="dia">Por Día (Detallado)</option>
+        <option value="semana">Por Semana (Agrupado)</option>
+        <option value="quincena">Por Quincena (Agrupado)</option>
+        <option value="mes">Por Mes (Agrupado)</option>
+    </select>
+
+    <div id="filtro-dia">
+        <label>Seleccionar Fecha:</label>
+        <input type="date" id="fecha-dia" onchange="cargarReporte()">
+    </div>
+
+    <div id="filtro-semana" class="sub-filtros">
+        <label>Elegir día de la semana:</label>
+        <input type="date" id="fecha-semana-ref" onchange="cargarReporte()">
+        <div id="rango-semana-texto" class="info-semana"></div>
+    </div>
+
+    <div id="filtro-quincena" class="sub-filtros">
+        <div style="display: flex; gap: 8px;">
+            <div style="flex: 2;"><label>Mes:</label><input type="month" id="mes-quincena" onchange="cargarReporte()"></div>
+            <div style="flex: 1;"><label>Q:</label>
+                <select id="select-quincena" onchange="cargarReporte()">
+                    <option value="1">1ra (1-15)</option>
+                    <option value="2">2da (16+)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="filtro-mes" class="sub-filtros">
+        <label>Seleccionar Mes:</label>
+        <input type="month" id="fecha-mes" onchange="cargarReporte()">
+    </div>
+</div>
+
+<div class="card-stats">
+    <div class="stat"><span>Venta Total</span><b id="stat-ventas">S/ 0.00</b></div>
+    <div class="stat" style="border-left: 2px solid #d4af37;"><span>Comisión Total</span><b id="stat-comision">S/ 0.00</b></div>
+</div>
+
+<table class="tabla-socios">
+    <thead>
+        <tr id="head-tabla">
+            <th style="width: 32%;">Taxista</th>
+            <th style="width: 32%;">Botella</th>
+            <th style="width: 18%;">Venta</th>
+            <th style="width: 18%;">Com.</th>
+        </tr>
+    </thead>
+    <tbody id="lista-reporte"></tbody>
+</table>
+
+<div class="ranking-title">🏆 TOP MENSUAL</div>
+
+<div class="filter-section" style="margin-top: 10px;">
+    <label>Historial de Ranking:</label>
+    <input type="month" id="mes-ranking" onchange="cargarRanking()">
+</div>
+
+<div id="ranking-container">
+    <div id="podium" class="podium-container"></div>
+    <div id="lista-resto" class="lista-ranking-resto"></div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAKJ0vJGvnzIdkKIvD1w0NCStA19T-TzoM",
+        authDomain: "venecia-control.firebaseapp.com",
+        projectId: "venecia-control",
+        storageBucket: "venecia-control.firebasestorage.app",
+        messagingSenderId: "486778694402",
+        appId: "1:486778694402:web:4276617163b85b5b7bf01b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    window.onload = function() {
+        const hoy = new Date().toISOString().split('T')[0];
+        const mesActual = hoy.substring(0, 7);
+        document.getElementById('fecha-dia').value = hoy;
+        document.getElementById('fecha-semana-ref').value = hoy;
+        document.getElementById('mes-quincena').value = mesActual;
+        document.getElementById('fecha-mes').value = mesActual;
+        document.getElementById('mes-ranking').value = mesActual;
+        setTimeout(() => {
+            cargarReporte();
+            cargarRanking();
+        }, 600);
+    };
+
+    function gestionarFiltros() {
+        const modo = document.getElementById('rango-tiempo').value;
+        document.getElementById('filtro-dia').style.display = (modo === 'dia') ? 'block' : 'none';
+        document.getElementById('filtro-semana').style.display = (modo === 'semana') ? 'flex' : 'none';
+        document.getElementById('filtro-quincena').style.display = (modo === 'quincena') ? 'flex' : 'none';
+        document.getElementById('filtro-mes').style.display = (modo === 'mes') ? 'block' : 'none';
+        cargarReporte();
+    }
+
+    function cargarReporte() {
+        const modo = document.getElementById('rango-tiempo').value;
+        const lista = document.getElementById('lista-reporte');
+        const head = document.getElementById('head-tabla');
+        lista.innerHTML = '<tr><td colspan="4" class="loading">Cargando...</td></tr>';
+
+        if(modo === 'dia') {
+            head.innerHTML = '<th style="width: 32%;">Taxista</th><th style="width: 32%;">Botella</th><th style="width: 18%;">Venta</th><th style="width: 18%;">Com.</th>';
+        } else {
+            head.innerHTML = '<th style="width: 40%;">Taxista</th><th style="width: 30%;">Cant. Bot</th><th style="width: 30%;">Total Com.</th>';
+        }
+
+        let consulta = db.collection("comisiones_taxis");
+        let fI, fF;
+
+        if (modo === 'dia') {
+            consulta = consulta.where("f", "==", document.getElementById('fecha-dia').value);
+        } else if (modo === 'semana') {
+            let fechaRef = new Date(document.getElementById('fecha-semana-ref').value + 'T00:00:00');
+            let diaSemana = fechaRef.getDay();
+            let diffLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+            let lunes = new Date(fechaRef);
+            lunes.setDate(fechaRef.getDate() + diffLunes);
+            let domingo = new Date(lunes);
+            domingo.setDate(lunes.getDate() + 6);
+            fI = lunes.toISOString().split('T')[0];
+            fF = domingo.toISOString().split('T')[0];
+            document.getElementById('rango-semana-texto').innerText = `Semana: Lun ${fI.split('-')[2]} a Dom ${fF.split('-')[2]}`;
+            consulta = consulta.where("f", ">=", fI).where("f", "<=", fF);
+        } else if (modo === 'quincena') {
+            const m = document.getElementById('mes-quincena').value;
+            const q = document.getElementById('select-quincena').value;
+            fI = (q === "1") ? m+"-01" : m+"-15";
+            fF = (q === "1") ? m+"-15" : m+"-31";
+            consulta = consulta.where("f", ">=", fI).where("f", "<=", fF);
+        } else if (modo === 'mes') {
+            const m = document.getElementById('fecha-mes').value;
+            consulta = consulta.where("f", ">=", m+"-01").where("f", "<=", m+"-31");
+        }
+
+        consulta.get().then(snap => {
+            lista.innerHTML = "";
+            let vT = 0, cT = 0;
+            if (snap.empty) {
+                lista.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#666;">Sin registros</td></tr>';
+                actualizarStats(0,0); return;
+            }
+
+            if(modo === 'dia') {
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    vT += d.p; cT += d.m;
+                    lista.innerHTML += `<tr><td style="color:#d4af37; font-weight:bold;">${d.t}</td><td>${d.b}</td><td>S/ ${d.p}</td><td>S/ ${d.m}</td></tr>`;
+                });
+            } else {
+                let agrupado = {};
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    vT += d.p; cT += d.m;
+                    if(!agrupado[d.t]) agrupado[d.t] = { b: 0, m: 0 };
+                    agrupado[d.t].b += 1;
+                    agrupado[d.t].m += d.m;
+                });
+                let sortable = Object.entries(agrupado).sort((a,b) => b[1].m - a[1].m);
+                sortable.forEach(item => {
+                    lista.innerHTML += `<tr><td style="color:#d4af37; font-weight:bold;">${item[0]}</td><td>${item[1].b}</td><td>S/ ${item[1].m}</td></tr>`;
+                });
+            }
+            lista.innerHTML += `<tr class="total-row"><td colspan="2">TOTAL</td><td id="td-total-venta">S/ ${vT}</td><td>S/ ${cT}</td></tr>`;
+            if(modo !== 'dia') document.getElementById('td-total-venta').innerText = "-";
+            actualizarStats(vT, cT);
+        });
+    }
+
+    function cargarRanking() {
+        const mesRanking = document.getElementById('mes-ranking').value;
+        const podium = document.getElementById('podium');
+        const resto = document.getElementById('lista-resto');
+        podium.innerHTML = '<div class="loading">Cargando Ranking...</div>';
+        resto.innerHTML = "";
+
+        db.collection("comisiones_taxis")
+            .where("f", ">=", mesRanking + "-01")
+            .where("f", "<=", mesRanking + "-31")
+            .get().then(snap => {
+                podium.innerHTML = "";
+                if (snap.empty) {
+                    podium.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">No hay datos para este mes.</div>';
+                    return;
+                }
+                let ranking = {};
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(!ranking[d.t]) ranking[d.t] = { b: 0, m: 0 };
+                    ranking[d.t].b += 1;
+                    ranking[d.t].m += d.m;
+                });
+                let sortR = Object.entries(ranking).sort((a,b) => b[1].m - a[1].m);
+                
+                sortR.forEach((item, index) => {
+                    if(index < 3) {
+                        let clase = (index === 0) ? "oro" : (index === 1) ? "plata" : "bronce";
+                        let medal = (index === 0) ? "🥇" : (index === 1) ? "🥈" : "🥉";
+                        podium.innerHTML += `
+                            <div class="rank-card ${clase}">
+                                <div class="rank-info">
+                                    <span class="rank-medal">${medal}</span>
+                                    <div>
+                                        <span class="rank-name">${item[0]}</span>
+                                        <span class="rank-qty">${item[1].b} botellas este mes</span>
+                                    </div>
+                                </div>
+                                <div class="rank-monto">
+                                    <b>S/ ${item[1].m}</b>
+                                    <span>Comisión Total</span>
+                                </div>
+                            </div>`;
+                    } else {
+                        resto.innerHTML += `
+                            <div class="row-ranking">
+                                <span style="font-weight:bold; color:#888;">#${index + 1} ${item[0]}</span>
+                                <span style="color:#d4af37; font-weight:bold;">S/ ${item[1].m}</span>
+                            </div>`;
+                    }
+                });
+            });
+    }
+
+    function actualizarStats(v, c) {
+        document.getElementById('stat-ventas').innerText = "S/ " + v;
+        document.getElementById('stat-comision').innerText = "S/ " + c;
+    }
+</script>
+</body>
+</html>
