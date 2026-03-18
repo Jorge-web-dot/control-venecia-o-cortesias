@@ -10,27 +10,16 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #0d0d0d; color: #e0e0e0; margin: 0; padding: 10px; touch-action: manipulation; }
         .container { max-width: 500px; margin: auto; background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; }
         h2 { text-align: center; color: #d4af37; text-transform: uppercase; font-size: 1.1em; margin-bottom: 15px; }
-        
         .input-group { background: #222; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #d4af37; }
         label { display: block; font-size: 0.75em; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-
-        /* Panel de Tiempo de Alta Precisión */
         .time-panel { background: #111; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; }
         .time-display { color: #d4af37; font-size: 2.5em; font-weight: bold; font-family: monospace; margin-bottom: 15px; letter-spacing: 2px; }
-        
         .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
         .time-column { display: flex; flex-direction: column; gap: 8px; align-items: center; }
         .col-label { font-size: 0.7em; color: #666; font-weight: bold; }
-
-        /* Estilos de Botones */
         .btn-unit { background: #333; color: white; border: 1px solid #444; width: 100%; padding: 15px 0; border-radius: 6px; font-size: 1.4em; font-weight: bold; }
         .btn-turbo { background: #222; color: #d4af37; border: 1px solid #333; width: 100%; padding: 10px 0; border-radius: 6px; font-size: 1em; }
-        .btn-unit:active { background: #d4af37; color: black; }
-        .btn-turbo:active { background: #444; }
-
         .ampm-switch { background: transparent; border: 1px solid #d4af37; color: #d4af37; padding: 8px 20px; border-radius: 20px; margin-top: 15px; font-weight: bold; }
-
-        /* Resto de la interfaz */
         .grid-btn { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
         button { border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-n { background: #333; color: white; padding: 12px 5px; }
@@ -40,7 +29,6 @@
         .btn-reg { background: #d4af37; color: black; width: 100%; font-size: 1.1em; padding: 18px; margin-top: 15px; text-transform: uppercase; font-weight: bold; }
         .btn-view { background: transparent; color: #888; width: 100%; margin-top: 10px; padding: 10px; border: 1px solid #333; font-size: 0.8em; }
         .oculto { display: none; }
-        .tabla-resumen td { padding: 10px 5px; border-bottom: 1px solid #333; text-align: center; font-size: 0.8em; }
     </style>
 </head>
 <body>
@@ -48,16 +36,11 @@
 <div class="container">
     <div id="v-registro">
         <h2>Registro de Cortesía</h2>
-
         <div class="input-group">
-            <label>Fecha y Hora de Entrega</label>
+            <label>Fecha y Hora</label>
             <input type="date" id="f" style="margin-bottom:15px;">
-            
             <div class="time-panel">
-                <div class="time-display">
-                    <span id="h-disp">12</span>:<span id="m-disp">00</span>
-                </div>
-
+                <div class="time-display"><span id="h-disp">12</span>:<span id="m-disp">00</span></div>
                 <div class="control-row">
                     <div class="time-column">
                         <span class="col-label">HORAS</span>
@@ -115,7 +98,7 @@
     <div id="v-resumen" class="oculto">
         <h2 style="color:#d4af37">Resumen</h2>
         <input type="date" id="filtro" onchange="consultar()" style="margin-bottom:10px;">
-        <div id="lista-totales" style="background:#222; padding:10px; border-radius:8px; border:1px solid #d4af37; margin-bottom:15px;"></div>
+        <div id="lista-totales" style="background:#222; padding:10px; border-radius:8px; border:1px solid #d4af37; margin-bottom:15px; font-size:0.9em;"></div>
         <table style="width:100%; border-collapse: collapse;">
             <tbody id="cuerpo-tabla"></tbody>
         </table>
@@ -124,7 +107,6 @@
 </div>
 
 <script>
-    // Configuración Firebase (Usando tu proyecto existente)
     const firebaseConfig = {
         apiKey: "AIzaSyAKJ0vJGvnzIdkKIvD1w0NCStA19T-TzoM",
         authDomain: "venecia-control.firebaseapp.com",
@@ -136,46 +118,45 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Lógica de Tiempo
-    let h = new Date().getHours();
-    let m = new Date().getMinutes();
-    let isAM = h < 12;
-    let dispH = h % 12 || 12;
-    let tTimer;
+    let h = 12, m = 0, isAM = true, tTimer;
 
     function updateTimeUI() {
-        document.getElementById('h-disp').innerText = dispH.toString().padStart(2, '0');
+        document.getElementById('h-disp').innerText = h.toString().padStart(2, '0');
         document.getElementById('m-disp').innerText = m.toString().padStart(2, '0');
         document.getElementById('ampm-btn').innerText = isAM ? "AM" : "PM";
     }
 
-    // Función de cambio unitario (Evita el doble salto)
     function modSimple(tipo, val) {
-        if(tipo === 'h') {
-            dispH += val;
-            if(dispH > 12) dispH = 1;
-            if(dispH < 1) dispH = 12;
-        } else {
-            m += val;
-            if(m > 59) m = 0;
-            if(m < 0) m = 59;
-        }
+        if(tipo === 'h') { h += val; if(h > 12) h = 1; if(h < 1) h = 12; }
+        else { m += val; if(m > 59) m = 0; if(m < 0) m = 59; }
         updateTimeUI();
     }
 
-    // Función Turbo
-    function startTurbo(tipo, val) {
-        tTimer = setInterval(() => modSimple(tipo, val), 100);
-    }
+    function startTurbo(tipo, val) { tTimer = setInterval(() => modSimple(tipo, val), 100); }
     function stopTurbo() { clearInterval(tTimer); }
-
     function toggleAMPM() { isAM = !isAM; updateTimeUI(); }
 
-    // Selección de campos
     function setN(v, btn) { document.getElementById('nom').value = v; reset('btn-n'); btn.classList.add('active-btn'); }
     function setP(v, btn) { document.getElementById('pro').value = v; reset('btn-p'); btn.classList.add('active-btn'); }
     function reset(c) { document.querySelectorAll('.'+c).forEach(b => b.classList.remove('active-btn')); }
     function prepararTaxista(btn) { document.getElementById('nom').value = "Tax: "; document.getElementById('nom').focus(); reset('btn-n'); btn.classList.add('active-btn'); }
+
+    function actualizarListaTaxistas() {
+        db.collection("cortesias").onSnapshot(snap => {
+            const dataList = document.getElementById('lista-taxistas');
+            let nombresUnicos = new Set();
+            snap.forEach(doc => {
+                const nombre = doc.data().n;
+                if(nombre && nombre.startsWith("Tax: ")) nombresUnicos.add(nombre);
+            });
+            dataList.innerHTML = "";
+            nombresUnicos.forEach(n => {
+                let opt = document.createElement('option');
+                opt.value = n;
+                dataList.appendChild(opt);
+            });
+        });
+    }
 
     async function registrar() {
         const nom = document.getElementById('nom').value;
@@ -184,7 +165,7 @@
 
         const data = {
             f: document.getElementById('f').value,
-            h: `${dispH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${isAM ? 'AM':'PM'}`,
+            h: `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${isAM ? 'AM':'PM'}`,
             n: nom, p: pro,
             c: parseInt(document.getElementById('can').value) || 1,
             t: Date.now()
@@ -195,7 +176,7 @@
             alert("¡Guardado!");
             document.getElementById('pro').value = "";
             reset('btn-p');
-        } catch (e) { alert("Error al conectar"); }
+        } catch (e) { alert("Error de conexión"); }
     }
 
     function irA(id) {
@@ -215,18 +196,19 @@
             snap.forEach(doc => lista.push({id: doc.id, ...doc.data()}));
             lista.sort((a, b) => b.t - a.t);
             lista.forEach(d => {
-                tabla.innerHTML += `<tr><td>${d.h}</td><td><b>x${d.c}</b></td><td>${d.n}</td><td>${d.p}</td><td><button onclick="borrar('${d.id}')" style="background:#600; color:white; padding:5px;">X</button></td></tr>`;
+                tabla.innerHTML += `<tr><td>${d.h}</td><td><b>x${d.c}</b></td><td>${d.n}</td><td>${d.p}</td><td><button onclick="borrar('${d.id}')" style="background:#600; color:white; border-radius:4px; padding:4px 8px;">X</button></td></tr>`;
                 sumas[d.p] = (sumas[d.p] || 0) + (parseInt(d.c) || 0);
             });
             for(let p in sumas) totales.innerHTML += `<div>${p}: <b>x${sumas[p]}</b></div>`;
         });
     }
 
-    async function borrar(id) { if(confirm("¿Borrar?")) await db.collection("cortesias").doc(id).delete(); }
+    async function borrar(id) { if(confirm("¿Borrar registro?")) await db.collection("cortesias").doc(id).delete(); }
 
     window.onload = () => {
         document.getElementById('f').value = new Date().toISOString().split('T')[0];
         updateTimeUI();
+        actualizarListaTaxistas();
     };
 </script>
 </body>
