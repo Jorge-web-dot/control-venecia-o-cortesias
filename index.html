@@ -14,32 +14,33 @@
         .input-group { background: #222; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #d4af37; }
         label { display: block; font-size: 0.75em; color: #888; margin-bottom: 5px; text-transform: uppercase; }
 
-        /* Panel de Tiempo Mejorado */
-        .time-panel { background: #111; padding: 12px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; }
-        .time-display-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .time-val { color: #d4af37; font-size: 2em; font-weight: bold; font-family: monospace; width: 50px; text-align: center; }
+        /* Panel de Tiempo de Alta Precisión */
+        .time-panel { background: #111; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; }
+        .time-display { color: #d4af37; font-size: 2.5em; font-weight: bold; font-family: monospace; margin-bottom: 15px; letter-spacing: 2px; }
         
-        .control-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; }
-        .col-ctrl { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        
-        /* Botones Diferenciados */
-        .btn-fast { background: #444; color: #d4af37; border: none; width: 100%; padding: 10px; border-radius: 5px; font-size: 1.2em; cursor: pointer; }
-        .btn-slow { background: #333; color: white; border: 1px solid #555; width: 100%; padding: 12px; border-radius: 5px; font-size: 1.3em; font-weight: bold; cursor: pointer; }
-        .btn-ampm { background: #222; border: 1px solid #d4af37; color: #d4af37; padding: 10px 20px; border-radius: 5px; font-weight: bold; margin-top: 10px; }
+        .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
+        .time-column { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .col-label { font-size: 0.7em; color: #666; font-weight: bold; }
 
+        /* Estilos de Botones */
+        .btn-unit { background: #333; color: white; border: 1px solid #444; width: 100%; padding: 15px 0; border-radius: 6px; font-size: 1.4em; font-weight: bold; }
+        .btn-turbo { background: #222; color: #d4af37; border: 1px solid #333; width: 100%; padding: 10px 0; border-radius: 6px; font-size: 1em; }
+        .btn-unit:active { background: #d4af37; color: black; }
+        .btn-turbo:active { background: #444; }
+
+        .ampm-switch { background: transparent; border: 1px solid #d4af37; color: #d4af37; padding: 8px 20px; border-radius: 20px; margin-top: 15px; font-weight: bold; }
+
+        /* Resto de la interfaz */
         .grid-btn { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
-        button { border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        button { border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-n { background: #333; color: white; padding: 12px 5px; }
         .btn-p { background: #252525; color: #d4af37; border: 1px solid #444; padding: 12px 5px; }
         .active-btn { background: #d4af37 !important; color: black !important; }
-        
         input { width: 100%; padding: 12px; border-radius: 5px; border: 1px solid #333; background: #111; color: white; box-sizing: border-box; margin-top: 5px; }
-        .btn-reg { background: #d4af37; color: black; width: 100%; font-size: 1.1em; padding: 15px; margin-top: 15px; text-transform: uppercase; font-weight: bold; }
+        .btn-reg { background: #d4af37; color: black; width: 100%; font-size: 1.1em; padding: 18px; margin-top: 15px; text-transform: uppercase; font-weight: bold; }
         .btn-view { background: transparent; color: #888; width: 100%; margin-top: 10px; padding: 10px; border: 1px solid #333; font-size: 0.8em; }
         .oculto { display: none; }
-        .tabla-resumen { width: 100%; border-collapse: collapse; font-size: 0.75em; margin-top: 15px; }
-        .tabla-resumen td { padding: 10px 5px; border-bottom: 1px solid #333; text-align: center; }
-        .btn-x { background: #600; color: white; border: none; padding: 5px 10px; border-radius: 3px; }
+        .tabla-resumen td { padding: 10px 5px; border-bottom: 1px solid #333; text-align: center; font-size: 0.8em; }
     </style>
 </head>
 <body>
@@ -49,31 +50,31 @@
         <h2>Registro de Cortesía</h2>
 
         <div class="input-group">
-            <label>Fecha y Hora</label>
-            <input type="date" id="f" style="margin-bottom:12px;">
+            <label>Fecha y Hora de Entrega</label>
+            <input type="date" id="f" style="margin-bottom:15px;">
             
             <div class="time-panel">
-                <div class="time-display-row">
-                    <span id="h-val" class="time-val">12</span>
-                    <span style="color:#d4af37; font-size:1.5em">:</span>
-                    <span id="m-val" class="time-val">00</span>
+                <div class="time-display">
+                    <span id="h-disp">12</span>:<span id="m-disp">00</span>
                 </div>
 
-                <div class="control-grid">
-                    <div class="col-ctrl">
-                        <button class="btn-fast" onmousedown="startTurbo('h', 1)" onmouseup="stopTurbo()" ontouchstart="startTurbo('h', 1)" ontouchend="stopTurbo()">▲▲</button>
-                        <button class="btn-slow" onclick="modUnit('h', 1)">+</button>
-                        <button class="btn-slow" onclick="modUnit('h', -1)">-</button>
-                        <button class="btn-fast" onmousedown="startTurbo('h', -1)" onmouseup="stopTurbo()" ontouchstart="startTurbo('h', -1)" ontouchend="stopTurbo()">▼▼</button>
+                <div class="control-row">
+                    <div class="time-column">
+                        <span class="col-label">HORAS</span>
+                        <button class="btn-turbo" onmousedown="startTurbo('h', 1)" onmouseup="stopTurbo()" ontouchstart="startTurbo('h', 1)" ontouchend="stopTurbo()">▲▲</button>
+                        <button class="btn-unit" onclick="modSimple('h', 1)">+</button>
+                        <button class="btn-unit" onclick="modSimple('h', -1)">-</button>
+                        <button class="btn-turbo" onmousedown="startTurbo('h', -1)" onmouseup="stopTurbo()" ontouchstart="startTurbo('h', -1)" ontouchend="stopTurbo()">▼▼</button>
                     </div>
-                    <div class="col-ctrl">
-                        <button class="btn-fast" onmousedown="startTurbo('m', 1)" onmouseup="stopTurbo()" ontouchstart="startTurbo('m', 1)" ontouchend="stopTurbo()">▲▲</button>
-                        <button class="btn-slow" onclick="modUnit('m', 1)">+</button>
-                        <button class="btn-slow" onclick="modUnit('m', -1)">-</button>
-                        <button class="btn-fast" onmousedown="startTurbo('m', -1)" onmouseup="stopTurbo()" ontouchstart="startTurbo('m', -1)" ontouchend="stopTurbo()">▼▼</button>
+                    <div class="time-column">
+                        <span class="col-label">MINUTOS</span>
+                        <button class="btn-turbo" onmousedown="startTurbo('m', 1)" onmouseup="stopTurbo()" ontouchstart="startTurbo('m', 1)" ontouchend="stopTurbo()">▲▲</button>
+                        <button class="btn-unit" onclick="modSimple('m', 1)">+</button>
+                        <button class="btn-unit" onclick="modSimple('m', -1)">-</button>
+                        <button class="btn-turbo" onmousedown="startTurbo('m', -1)" onmouseup="stopTurbo()" ontouchstart="startTurbo('m', -1)" ontouchend="stopTurbo()">▼▼</button>
                     </div>
                 </div>
-                <button class="btn-ampm" id="ampm-val" onclick="toggleAMPM()">AM</button>
+                <button class="ampm-switch" id="ampm-btn" onclick="toggleAMPM()">AM</button>
             </div>
         </div>
 
@@ -108,14 +109,14 @@
         </div>
 
         <button class="btn-reg" onclick="registrar()">Guardar Cortesía</button>
-        <button class="btn-view" onclick="irA('v-resumen')">Ver Resumen y Borrar</button>
+        <button class="btn-view" onclick="irA('v-resumen')">Ver Resumen Diario</button>
     </div>
 
     <div id="v-resumen" class="oculto">
         <h2 style="color:#d4af37">Resumen</h2>
         <input type="date" id="filtro" onchange="consultar()" style="margin-bottom:10px;">
-        <div id="resumen-totales" class="totales-box" style="background:#222; padding:10px; border-radius:8px; border:1px solid #d4af37;"><div id="lista-totales"></div></div>
-        <table class="tabla-resumen">
+        <div id="lista-totales" style="background:#222; padding:10px; border-radius:8px; border:1px solid #d4af37; margin-bottom:15px;"></div>
+        <table style="width:100%; border-collapse: collapse;">
             <tbody id="cuerpo-tabla"></tbody>
         </table>
         <button class="btn-reg" style="background:#333; color:white;" onclick="irA('v-registro')">Volver</button>
@@ -123,6 +124,7 @@
 </div>
 
 <script>
+    // Configuración Firebase (Usando tu proyecto existente)
     const firebaseConfig = {
         apiKey: "AIzaSyAKJ0vJGvnzIdkKIvD1w0NCStA19T-TzoM",
         authDomain: "venecia-control.firebaseapp.com",
@@ -134,73 +136,55 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let curH = new Date().getHours();
-    let curM = new Date().getMinutes();
-    let isAM = curH < 12;
-    let dispH = curH % 12 || 12;
-    let turboTimer;
+    // Lógica de Tiempo
+    let h = new Date().getHours();
+    let m = new Date().getMinutes();
+    let isAM = h < 12;
+    let dispH = h % 12 || 12;
+    let tTimer;
 
     function updateTimeUI() {
-        document.getElementById('h-val').innerText = dispH.toString().padStart(2, '0');
-        document.getElementById('m-val').innerText = curM.toString().padStart(2, '0');
-        document.getElementById('ampm-val').innerText = isAM ? "AM" : "PM";
+        document.getElementById('h-disp').innerText = dispH.toString().padStart(2, '0');
+        document.getElementById('m-disp').innerText = m.toString().padStart(2, '0');
+        document.getElementById('ampm-btn').innerText = isAM ? "AM" : "PM";
     }
 
-    // TOQUE SIMPLE (Exacto 1 unidad)
-    function modUnit(tipo, val) {
+    // Función de cambio unitario (Evita el doble salto)
+    function modSimple(tipo, val) {
         if(tipo === 'h') {
             dispH += val;
             if(dispH > 12) dispH = 1;
             if(dispH < 1) dispH = 12;
         } else {
-            curM += val;
-            if(curM > 59) curM = 0;
-            if(curM < 0) curM = 59;
+            m += val;
+            if(m > 59) m = 0;
+            if(m < 0) m = 59;
         }
         updateTimeUI();
     }
 
-    // MODO TURBO (Rápido)
+    // Función Turbo
     function startTurbo(tipo, val) {
-        modUnit(tipo, val);
-        turboTimer = setInterval(() => modUnit(tipo, val), 120);
+        tTimer = setInterval(() => modSimple(tipo, val), 100);
     }
-    function stopTurbo() { clearInterval(turboTimer); }
+    function stopTurbo() { clearInterval(tTimer); }
 
     function toggleAMPM() { isAM = !isAM; updateTimeUI(); }
 
-    function setN(v, btn) {
-        document.getElementById('nom').value = v;
-        resetActives('btn-n');
-        btn.classList.add('active-btn');
-    }
-
-    function prepararTaxista(btn) {
-        document.getElementById('nom').value = "Tax: ";
-        document.getElementById('nom').focus();
-        resetActives('btn-n');
-        btn.classList.add('active-btn');
-    }
-
-    function setP(v, btn) {
-        document.getElementById('pro').value = v;
-        resetActives('btn-p');
-        btn.classList.add('active-btn');
-    }
-
-    function resetActives(clase) {
-        document.querySelectorAll('.'+clase).forEach(b => b.classList.remove('active-btn'));
-    }
+    // Selección de campos
+    function setN(v, btn) { document.getElementById('nom').value = v; reset('btn-n'); btn.classList.add('active-btn'); }
+    function setP(v, btn) { document.getElementById('pro').value = v; reset('btn-p'); btn.classList.add('active-btn'); }
+    function reset(c) { document.querySelectorAll('.'+c).forEach(b => b.classList.remove('active-btn')); }
+    function prepararTaxista(btn) { document.getElementById('nom').value = "Tax: "; document.getElementById('nom').focus(); reset('btn-n'); btn.classList.add('active-btn'); }
 
     async function registrar() {
         const nom = document.getElementById('nom').value;
         const pro = document.getElementById('pro').value;
-        if(!nom || !pro) return alert("Falta datos");
+        if(!nom || !pro) return alert("Completa nombre y producto");
 
-        const horaFull = `${dispH.toString().padStart(2, '0')}:${curM.toString().padStart(2, '0')} ${isAM ? 'AM':'PM'}`;
         const data = {
             f: document.getElementById('f').value,
-            h: horaFull,
+            h: `${dispH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${isAM ? 'AM':'PM'}`,
             n: nom, p: pro,
             c: parseInt(document.getElementById('can').value) || 1,
             t: Date.now()
@@ -208,50 +192,33 @@
 
         try {
             await db.collection("cortesias").add(data);
-            alert("Guardado");
+            alert("¡Guardado!");
             document.getElementById('pro').value = "";
-            resetActives('btn-p');
-            cargarSugerencias();
-        } catch (e) { alert("Error"); }
-    }
-
-    function cargarSugerencias() {
-        db.collection("cortesias").get().then(snap => {
-            let nombres = new Set();
-            snap.forEach(doc => {
-                let n = doc.data().n;
-                if(n && n.startsWith("Tax: ")) nombres.add(n);
-            });
-            const dl = document.getElementById('lista-taxistas');
-            dl.innerHTML = "";
-            nombres.forEach(n => dl.innerHTML += `<option value="${n}">`);
-        });
+            reset('btn-p');
+        } catch (e) { alert("Error al conectar"); }
     }
 
     function irA(id) {
         document.getElementById('v-registro').classList.add('oculto');
         document.getElementById('v-resumen').classList.add('oculto');
         document.getElementById(id).classList.remove('oculto');
-        if(id === 'v-resumen') {
-            document.getElementById('filtro').value = document.getElementById('f').value;
-            consultar();
-        }
+        if(id === 'v-resumen') { document.getElementById('filtro').value = document.getElementById('f').value; consultar(); }
     }
 
     function consultar() {
         const f = document.getElementById('filtro').value;
-    
+        db.collection("cortesias").where("f", "==", f).onSnapshot(snap => {
             const tabla = document.getElementById('cuerpo-tabla');
-            const listaTotales = document.getElementById('lista-totales');
-            tabla.innerHTML = ""; listaTotales.innerHTML = "";
+            const totales = document.getElementById('lista-totales');
+            tabla.innerHTML = ""; totales.innerHTML = "";
             let sumas = {}, lista = [];
             snap.forEach(doc => lista.push({id: doc.id, ...doc.data()}));
             lista.sort((a, b) => b.t - a.t);
             lista.forEach(d => {
-                tabla.innerHTML += `<tr><td>${d.h}</td><td>${d.c}</td><td>${d.n}</td><td>${d.p}</td><td><button class="btn-x" onclick="borrar('${d.id}')">X</button></td></tr>`;
+                tabla.innerHTML += `<tr><td>${d.h}</td><td><b>x${d.c}</b></td><td>${d.n}</td><td>${d.p}</td><td><button onclick="borrar('${d.id}')" style="background:#600; color:white; padding:5px;">X</button></td></tr>`;
                 sumas[d.p] = (sumas[d.p] || 0) + (parseInt(d.c) || 0);
             });
-            for(let p in sumas) listaTotales.innerHTML += `<div>${p}: <b>x${sumas[p]}</b></div>`;
+            for(let p in sumas) totales.innerHTML += `<div>${p}: <b>x${sumas[p]}</b></div>`;
         });
     }
 
@@ -260,7 +227,6 @@
     window.onload = () => {
         document.getElementById('f').value = new Date().toISOString().split('T')[0];
         updateTimeUI();
-        cargarSugerencias();
     };
 </script>
 </body>
